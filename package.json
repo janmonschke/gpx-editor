@@ -5,7 +5,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "parcel build index.html",
-    "start": "parcel index.html"
+    "start": "parcel index.html",
+    "deploy": "parcel build index.html --no-cache --public-url ./ && gh-pages -d dist -b gh-pages"
   },
   "repository": {
     "type": "git",
@@ -20,6 +21,7 @@
   "devDependencies": {
     "@types/file-saver": "^2.0.3",
     "@types/leaflet": "^1.7.5",
+    "gh-pages": "^3.2.3",
     "parcel": "^2.0.0"
   },
   "dependencies": {
