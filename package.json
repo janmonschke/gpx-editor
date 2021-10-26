@@ -1,0 +1,33 @@
+{
+  "name": "display-gpx",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "parcel build index.html",
+    "start": "parcel index.html"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/janmonschke/display-gpx.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/janmonschke/display-gpx/issues"
+  },
+  "homepage": "https://github.com/janmonschke/display-gpx#readme",
+  "devDependencies": {
+    "@types/file-saver": "^2.0.3",
+    "@types/leaflet": "^1.7.5",
+    "parcel": "^2.0.0"
+  },
+  "dependencies": {
+    "date-fns": "^2.25.0",
+    "file-saver": "^2.0.5",
+    "leaflet": "^1.7.1",
+    "lit-html": "^2.0.1",
+    "spectre.css": "^0.5.9",
+    "xstate": "^4.25.0"
+  }
+}

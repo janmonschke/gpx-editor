@@ -1,0 +1,21 @@
+.editorUi {
+  --ui-margin: 12px;
+}
+
+.editorUi__container {
+  background-color: rgba(255,255,255, 0.6);
+  padding: 12px;
+}
+
+.editorUi__main {
+  position: fixed;
+  top: var(--ui-margin);
+  left: var(--ui-margin);
+}
+
+.editorUi__selectedPoint {
+  position: fixed;
+  top: var(--ui-margin);
+  right: var(--ui-margin);
+  font-size: 18px;
+}

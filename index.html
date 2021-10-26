@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>GPX Viewer & Editor</title>
+    <meta name="viewport" content="initial-scale=1.0" />
+    <meta charset="utf-8" />
+    <style>
+      body, html {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+
+      #map {
+        width: 100%;
+        height: 100%;
+        position: absolute;
+      }
+
+      .content {
+        position: absolute;
+      }
+
+      .dndIndicator {
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        pointer-events: none;
+      }
+
+      .content, .dndIndicator {
+        /* Leaflet sets the map's z-index to 400, so we need a higher index here */
+        z-index: 500;
+      }
+
+      body.dragging .dndIndicator {
+        border: 6px dashed rgba(0,0,255,0.5);
+      }
+
+      .current-point {
+        filter: hue-rotate(120deg);
+      }
+    </style>
+  </head>
+  <body>
+    <div id="map"></div>
+    <div class="content"></div>
+    <div class="dndIndicator"></div>
+
+    <script type="module" src="index.ts"></script>
+  </body>
+</html>
