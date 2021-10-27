@@ -168,17 +168,21 @@ export const editorMachine = createMachine<
         },
       }),
       toggleMarkers: assign({ showMarkers: (ctx) => !ctx.showMarkers }),
-      syncMarkers: (ctx) => {
-        if (ctx.showMarkers) {
-          if (ctx.map && ctx.file) {
-            ctx.file.points.forEach((point) => {
-              point.marker.addTo(ctx.map);
-            });
+      syncMarkers: assign({
+        currentPoint: (ctx) => {
+          if (ctx.showMarkers) {
+            if (ctx.map && ctx.file) {
+              ctx.file.points.forEach((point) => {
+                point.marker.addTo(ctx.map);
+              });
+            }
+            return ctx.currentPoint;
+          } else {
+            ctx.file.points.forEach((point) => point.marker.remove());
+            return undefined;
           }
-        } else {
-          ctx.file.points.forEach((point) => point.marker.remove());
-        }
-      },
+        },
+      }),
       adjustMapBoundary: (ctx) => {
         if (ctx.file && ctx.map) {
           const coordinates: Leaflet.LatLngLiteral[] = [];
