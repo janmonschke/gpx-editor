@@ -5259,6 +5259,9 @@ const editorMachine = _xstate.createMachine({
                     actions: [
                         "assignFile"
                     ]
+                },
+                PARSE_ERROR: {
+                    target: "choose-gpx"
                 }
             }
         },
@@ -5411,11 +5414,24 @@ const editorMachine = _xstate.createMachine({
                 parseDoc.then((xmlDoc)=>_file.parseFileFromGPX(xmlDoc, {
                         fileName
                     })
-                ).then((file)=>callback({
+                ).then((file)=>{
+                    if (file.points.length) callback({
                         type: "FILE_PARSED",
                         file
-                    })
-                );
+                    });
+                    else {
+                        alert("Could not find points in GPX file.");
+                        callback({
+                            type: "PARSE_ERROR"
+                        });
+                    }
+                }).catch((error)=>{
+                    alert("Could not parse the GPX file. Check console for more details.");
+                    console.error(error);
+                    callback({
+                        type: "PARSE_ERROR"
+                    });
+                });
             }
         ,
         markerInteraction: (ctx)=>(callback)=>{
@@ -5438,7 +5454,7 @@ const editorMachine = _xstate.createMachine({
     }
 });
 
-},{"leaflet":"aM6gQ","xstate":"cyY3U","./file":"1CvTu","./map":"bIdL8","@parcel/transformer-js/src/esmodule-helpers.js":"ciiiV","url:../demo/kungsleden.gpx":"dORR0"}],"aM6gQ":[function(require,module,exports) {
+},{"leaflet":"aM6gQ","xstate":"cyY3U","./file":"1CvTu","./map":"bIdL8","url:../demo/kungsleden.gpx":"dORR0","@parcel/transformer-js/src/esmodule-helpers.js":"ciiiV"}],"aM6gQ":[function(require,module,exports) {
 (function(global, factory) {
     typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) : typeof define === 'function' && define.amd ? define([
         'exports'
@@ -15704,34 +15720,44 @@ function parseFileFromGPX(gpxDoc, meta = {
         if (child.nodeName === "time") meta.time = child.textContent;
     });
     // Parse the points
-    const pointElements = gpxDoc.getElementsByTagName("trkpt");
-    const points = Array.from(pointElements).map((curr)=>{
-        const elevationEl = curr.getElementsByTagName("ele")[0];
-        const elevation = elevationEl ? parseFloat(elevationEl.textContent) : undefined;
-        const timeString = curr.getElementsByTagName("time")[0].textContent;
-        const time = new Date(timeString);
-        const lat = parseFloat(curr.getAttribute("lat"));
-        const lng = parseFloat(curr.getAttribute("lon"));
-        const latLng = {
-            lat,
-            lng
-        };
-        const marker = _leafletDefault.default.marker(latLng, {
-            draggable: true
-        });
-        const point = {
-            latLng,
-            elevation,
-            time,
-            timeString,
-            marker
-        };
-        return point;
-    });
+    const trkptElements = gpxDoc.getElementsByTagName("trkpt");
+    const rteptElements = gpxDoc.getElementsByTagName("rtept");
+    const isGPX1_0 = trkptElements.length > 0;
+    const isGPX1_1 = rteptElements.length > 0;
+    const sourceElements = isGPX1_0 ? trkptElements : isGPX1_1 ? rteptElements : [];
+    let points = Array.from(sourceElements).map(parseGPXElementToPoint);
     return {
         meta,
         points
     };
+}
+/**
+ * Parses a GPX Element into a Point representation
+ * @param element The element to parse
+ * @returns A point object
+ */ function parseGPXElementToPoint(element) {
+    const elevationEl = element.getElementsByTagName("ele")[0];
+    const elevation = elevationEl ? parseFloat(elevationEl.textContent) : undefined;
+    const timeEl = element.getElementsByTagName("time")[0];
+    const timeString = timeEl ? timeEl.textContent : undefined;
+    const time = timeString ? new Date(timeString) : undefined;
+    const lat = parseFloat(element.getAttribute("lat"));
+    const lng = parseFloat(element.getAttribute("lon"));
+    const latLng = {
+        lat,
+        lng
+    };
+    const marker = _leafletDefault.default.marker(latLng, {
+        draggable: true
+    });
+    const point = {
+        latLng,
+        elevation,
+        time,
+        timeString,
+        marker
+    };
+    return point;
 }
 function parseXMLDocumentFromFile(file) {
     return new Promise((resolve, reject)=>{
@@ -15762,18 +15788,18 @@ function parseXMLDocumentFromText(text) {
     });
 }
 function saveFile(file, config) {
-    const sortedPoints = file.points.slice().sort((a, b)=>a.time.getTime() - b.time.getTime()
-    );
     const time = file.meta.time ? `<time>${file.meta.time}</time>` : "";
     const newGPX = `<?xml version="1.0" encoding="UTF-8" ?>
     <gpx version="1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.topografix.com/GPX/1/0" xsi:schemaLocation="http://www.topografix.com/GPX/1/0 http://www.topografix.com/GPX/1/0/gpx.xsd">
       ${time}
       <trk>
         <trkseg>
-          ${sortedPoints.map((point)=>{
+          ${file.points.map((point)=>{
         const longLat = point.marker.getLatLng();
         const elevation = `<ele>${point.elevation}</ele>`;
-        return `<trkpt lat="${longLat.lat}" lon="${longLat.lng}"><time>${point.timeString}</time>${config.omitElevation ? "" : elevation}</trkpt>`;
+        return `<trkpt lat="${longLat.lat}" lon="${longLat.lng}">
+              ${point.timeString ? `<time>${point.timeString}</time>` : ""}
+              ${config.omitElevation ? "" : elevation}</trkpt>`;
     }).join("")}
         </trkseg>
       </trk>
@@ -16042,7 +16068,7 @@ const EditorUI = (props)=>_litHtml.html`<div class="editorUi">
 ;
 const SelectedPoint = (props)=>_litHtml.html`<aside class="editorUi__container">
     <div>Point #${props.file.points.indexOf(props.selectedPoint) + 1}</div>
-    <div>${_dateFns.format(props.selectedPoint.time, "HH:ss, MMM do")}</div>
+    ${props.selectedPoint.time && _litHtml.html`<div>${_dateFns.format(props.selectedPoint.time, "HH:ss, MMM do")}</div>`}
     <button class="btn btn-primary" @click=${()=>props.removePoint()
     }>
       Remove point
