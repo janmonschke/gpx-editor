@@ -477,8 +477,13 @@ machine.onTransition((ev)=>{
                     file
                 })
             ;
+            const onDemoSelected = ()=>machine.send({
+                    type: "DEMO_SELECTED"
+                })
+            ;
             return _litHtml.render(_chooseGpx.ChooseGpx({
-                onFileSelected
+                onFileSelected,
+                onDemoSelected
             }), contentEl);
         case "display-gpx":
             const removePoint = ()=>machine.send({
@@ -5214,6 +5219,8 @@ var _leafletDefault = parcelHelpers.interopDefault(_leaflet);
 var _xstate = require("xstate");
 var _file = require("./file");
 var _map = require("./map");
+var _kungsledenGpx = require("url:../demo/kungsleden.gpx");
+var _kungsledenGpxDefault = parcelHelpers.interopDefault(_kungsledenGpx);
 const editorMachine = _xstate.createMachine({
     id: "map-editor",
     initial: "idle",
@@ -5235,13 +5242,16 @@ const editorMachine = _xstate.createMachine({
             on: {
                 FILE_SELECTED: {
                     target: "load-gpx"
+                },
+                DEMO_SELECTED: {
+                    target: "load-gpx"
                 }
             }
         },
         "load-gpx": {
             entry: "resetMarkers",
             invoke: {
-                src: "loadPointsFromFile"
+                src: "loadPointsFromFileOrDemo"
             },
             on: {
                 FILE_PARSED: {
@@ -5386,9 +5396,20 @@ const editorMachine = _xstate.createMachine({
         })
     },
     services: {
-        loadPointsFromFile: (_, event)=>(callback)=>{
-                if (event.type === "FILE_SELECTED") _file.parseXMLDocumentFromFile(event.file).then((xmlDoc)=>_file.parseFileFromGPX(xmlDoc, {
-                        fileName: event.file.name
+        loadPointsFromFileOrDemo: (_, event)=>(callback)=>{
+                let parseDoc = Promise.reject();
+                let fileName = "";
+                if (event.type === "DEMO_SELECTED") {
+                    parseDoc = fetch(_kungsledenGpxDefault.default).then((res)=>res.text()
+                    ).then((text)=>_file.parseXMLDocumentFromText(text)
+                    );
+                    fileName = "kungsleden.gpx";
+                } else if (event.type === "FILE_SELECTED") {
+                    parseDoc = _file.parseXMLDocumentFromFile(event.file);
+                    fileName = event.file.name;
+                }
+                parseDoc.then((xmlDoc)=>_file.parseFileFromGPX(xmlDoc, {
+                        fileName
                     })
                 ).then((file)=>callback({
                         type: "FILE_PARSED",
@@ -5417,7 +5438,7 @@ const editorMachine = _xstate.createMachine({
     }
 });
 
-},{"leaflet":"aM6gQ","xstate":"cyY3U","./file":"1CvTu","./map":"bIdL8","@parcel/transformer-js/src/esmodule-helpers.js":"ciiiV"}],"aM6gQ":[function(require,module,exports) {
+},{"leaflet":"aM6gQ","xstate":"cyY3U","./file":"1CvTu","./map":"bIdL8","@parcel/transformer-js/src/esmodule-helpers.js":"ciiiV","url:../demo/kungsleden.gpx":"dORR0"}],"aM6gQ":[function(require,module,exports) {
 (function(global, factory) {
     typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) : typeof define === 'function' && define.amd ? define([
         'exports'
@@ -15663,6 +15684,12 @@ parcelHelpers.defineInteropFlag(exports);
  */ parcelHelpers.export(exports, "parseXMLDocumentFromFile", ()=>parseXMLDocumentFromFile
 );
 /**
+ * Parses text into a XML document
+ * @param text The text to parse
+ * @returns The XML document
+ */ parcelHelpers.export(exports, "parseXMLDocumentFromText", ()=>parseXMLDocumentFromText
+);
+/**
  * @param file File to save
  * @param config Optional
  */ parcelHelpers.export(exports, "saveFile", ()=>saveFile
@@ -15722,6 +15749,16 @@ function parseXMLDocumentFromFile(file) {
             reject(er);
         });
         reader.readAsText(file);
+    });
+}
+function parseXMLDocumentFromText(text) {
+    return new Promise((resolve, reject)=>{
+        try {
+            const doc = new DOMParser().parseFromString(text, "text/xml");
+            resolve(doc);
+        } catch (e) {
+            reject(e);
+        }
     });
 }
 function saveFile(file, config) {
@@ -15924,6 +15961,9 @@ module.exports = require('./helpers/bundle-url').getBundleURL('65mnt') + "marker
 },{"./helpers/bundle-url":"chiK4"}],"a464e":[function(require,module,exports) {
 module.exports = require('./helpers/bundle-url').getBundleURL('65mnt') + "marker-shadow.222045e9.png" + "?" + Date.now();
 
+},{"./helpers/bundle-url":"chiK4"}],"dORR0":[function(require,module,exports) {
+module.exports = require('./helpers/bundle-url').getBundleURL('65mnt') + "kungsleden.fbc45847.gpx" + "?" + Date.now();
+
 },{"./helpers/bundle-url":"chiK4"}],"kEI4A":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
@@ -15946,9 +15986,18 @@ const ChooseGpx = (props)=>_litHtml.html` <div
             @change=${(event)=>props.onFileSelected(event.currentTarget.files[0])
     }
           />
-          Select GPX file
+          Select a <em>.gpx</em> file
         </label>
       </form>
+      <div class="mt-2 text-center">
+        <button
+          class="btn btn-sm btn-link"
+          @click=${()=>props.onDemoSelected()
+    }
+        >
+          <small>(Or open an example file)</small>
+        </button>
+      </div>
     </div>
   </div>
 </div>`
@@ -25748,6 +25797,6 @@ const Export = (props)=>_litHtml.html` <div class="modal active">
 </div>`
 ;
 
-},{"lit-html":"5SJ7D","../file":"1CvTu","@parcel/transformer-js/src/esmodule-helpers.js":"ciiiV"}]},["7SOzi","gK55r"], "gK55r", "parcelRequire1898")
+},{"lit-html":"5SJ7D","../file":"1CvTu","@parcel/transformer-js/src/esmodule-helpers.js":"ciiiV"}]},["7SOzi","gK55r"], "gK55r", "parcelRequirec35f")
 
 //# sourceMappingURL=index.59c1f714.js.map
