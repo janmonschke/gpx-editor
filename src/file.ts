@@ -101,6 +101,22 @@ export function parseXMLDocumentFromFile(file: File) {
   });
 }
 
+/**
+ * Parses text into a XML document
+ * @param text The text to parse
+ * @returns The XML document
+ */
+export function parseXMLDocumentFromText(text: string) {
+  return new Promise<Document>((resolve, reject) => {
+    try {
+      const doc = new DOMParser().parseFromString(text, "text/xml");
+      resolve(doc);
+    } catch (e) {
+      reject(e);
+    }
+  });
+}
+
 export type ExportOptions = {
   fileName: string;
   omitElevation: boolean;

@@ -1,12 +1,14 @@
 import Leaflet from "leaflet";
 import { createMachine, assign } from "xstate";
-import { parseXMLDocumentFromFile } from "./file";
+import { parseXMLDocumentFromFile, parseXMLDocumentFromText } from "./file";
 import { initializeMap } from "./map";
 import { ParsedFile, parseFileFromGPX, Point } from "./file";
+import demoFileUrl from "url:../demo/kungsleden.gpx";
 
 type MapEditorEvent =
   | { type: "done.invoke.initializeMap"; data: Leaflet.Map }
   | { type: "FILE_SELECTED"; file: File }
+  | { type: "DEMO_SELECTED" }
   | { type: "FILE_PARSED"; file: ParsedFile }
   | { type: "POINT_SELECTED"; point?: Point }
   | { type: "POINT_REMOVED"; point: Point }
@@ -92,12 +94,15 @@ export const editorMachine = createMachine<
           FILE_SELECTED: {
             target: "load-gpx",
           },
+          DEMO_SELECTED: {
+            target: "load-gpx",
+          },
         },
       },
       "load-gpx": {
         entry: "resetMarkers",
         invoke: {
-          src: "loadPointsFromFile",
+          src: "loadPointsFromFileOrDemo",
         },
         on: {
           FILE_PARSED: {
@@ -238,14 +243,21 @@ export const editorMachine = createMachine<
       }),
     },
     services: {
-      loadPointsFromFile: (_, event) => (callback) => {
-        if (event.type === "FILE_SELECTED") {
-          parseXMLDocumentFromFile(event.file)
-            .then((xmlDoc) =>
-              parseFileFromGPX(xmlDoc, { fileName: (event.file as File).name })
-            )
-            .then((file) => callback({ type: "FILE_PARSED", file }));
+      loadPointsFromFileOrDemo: (_, event) => (callback) => {
+        let parseDoc: Promise<Document> = Promise.reject();
+        let fileName = "";
+        if (event.type === "DEMO_SELECTED") {
+          parseDoc = fetch(demoFileUrl)
+            .then((res) => res.text())
+            .then((text) => parseXMLDocumentFromText(text));
+          fileName = "kungsleden.gpx";
+        } else if (event.type === "FILE_SELECTED") {
+          parseDoc = parseXMLDocumentFromFile(event.file);
+          fileName = event.file.name;
         }
+        parseDoc
+          .then((xmlDoc) => parseFileFromGPX(xmlDoc, { fileName }))
+          .then((file) => callback({ type: "FILE_PARSED", file }));
       },
       markerInteraction: (ctx) => (callback) => {
         if (ctx.file) {

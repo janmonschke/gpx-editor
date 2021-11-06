@@ -3,6 +3,7 @@ import { html } from "lit-html";
 
 type Props = {
   onFileSelected: (file: File) => void;
+  onDemoSelected: () => void;
 };
 
 export const ChooseGpx = (props: Props) => html` <div
@@ -22,9 +23,17 @@ export const ChooseGpx = (props: Props) => html` <div
                 (event.currentTarget as HTMLInputElement).files[0]
               )}
           />
-          Select GPX file
+          Select a <em>.gpx</em> file
         </label>
       </form>
+      <div class="mt-2 text-center">
+        <button
+          class="btn btn-sm btn-link"
+          @click=${() => props.onDemoSelected()}
+        >
+          <small>(Or open an example file)</small>
+        </button>
+      </div>
     </div>
   </div>
 </div>`;

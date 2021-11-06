@@ -16,7 +16,8 @@ machine
       case "choose-gpx":
         const onFileSelected = (file: File) =>
           machine.send({ type: "FILE_SELECTED", file });
-        return render(ChooseGpx({ onFileSelected }), contentEl);
+        const onDemoSelected = () => machine.send({ type: "DEMO_SELECTED" });
+        return render(ChooseGpx({ onFileSelected, onDemoSelected }), contentEl);
       case "display-gpx":
         const removePoint = () =>
           machine.send({
