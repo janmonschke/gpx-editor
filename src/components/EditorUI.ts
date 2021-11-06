@@ -44,7 +44,8 @@ export const EditorUI = (props: Props) => html`<div class="editorUi">
 const SelectedPoint = (props: Props) =>
   html`<aside class="editorUi__container">
     <div>Point #${props.file.points.indexOf(props.selectedPoint) + 1}</div>
-    <div>${format(props.selectedPoint.time, "HH:ss, MMM do")}</div>
+    ${props.selectedPoint.time &&
+    html`<div>${format(props.selectedPoint.time, "HH:ss, MMM do")}</div>`}
     <button class="btn btn-primary" @click=${() => props.removePoint()}>
       Remove point
     </button>

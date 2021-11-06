@@ -9,8 +9,8 @@ export type FileMeta = {
 export type Point = {
   latLng: Leaflet.LatLngLiteral;
   elevation?: number;
-  time: Date;
-  timeString: string;
+  time?: Date;
+  timeString?: string;
   marker: Leaflet.Marker;
 };
 
@@ -41,8 +41,9 @@ export function parseFileFromGPX(
     const elevation = elevationEl
       ? parseFloat(elevationEl.textContent)
       : undefined;
-    const timeString = curr.getElementsByTagName("time")[0].textContent;
-    const time = new Date(timeString);
+    const timeEl = curr.getElementsByTagName("time")[0];
+    const timeString = timeEl ? timeEl.textContent : undefined;
+    const time = timeString ? new Date(timeString) : undefined;
     const lat = parseFloat(curr.getAttribute("lat"));
     const lng = parseFloat(curr.getAttribute("lon"));
     const latLng: Leaflet.LatLngLiteral = {
@@ -127,22 +128,19 @@ export type ExportOptions = {
  * @param config Optional
  */
 export function saveFile(file: ParsedFile, config: ExportOptions) {
-  const sortedPoints = file.points
-    .slice()
-    .sort((a, b) => a.time.getTime() - b.time.getTime());
   const time = file.meta.time ? `<time>${file.meta.time}</time>` : "";
   const newGPX = `<?xml version="1.0" encoding="UTF-8" ?>
     <gpx version="1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.topografix.com/GPX/1/0" xsi:schemaLocation="http://www.topografix.com/GPX/1/0 http://www.topografix.com/GPX/1/0/gpx.xsd">
       ${time}
       <trk>
         <trkseg>
-          ${sortedPoints
+          ${file.points
             .map((point) => {
               const longLat = point.marker.getLatLng();
               const elevation = `<ele>${point.elevation}</ele>`;
-              return `<trkpt lat="${longLat.lat}" lon="${longLat.lng}"><time>${
-                point.timeString
-              }</time>${config.omitElevation ? "" : elevation}</trkpt>`;
+              return `<trkpt lat="${longLat.lat}" lon="${longLat.lng}">
+              ${point.timeString ? `<time>${point.timeString}</time>` : ""}
+              ${config.omitElevation ? "" : elevation}</trkpt>`;
             })
             .join("")}
         </trkseg>
