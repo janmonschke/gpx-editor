@@ -35,37 +35,53 @@ export function parseFileFromGPX(
     }
   });
   // Parse the points
-  const pointElements = gpxDoc.getElementsByTagName("trkpt");
-  const points = Array.from(pointElements).map<Point>((curr) => {
-    const elevationEl = curr.getElementsByTagName("ele")[0];
-    const elevation = elevationEl
-      ? parseFloat(elevationEl.textContent)
-      : undefined;
-    const timeEl = curr.getElementsByTagName("time")[0];
-    const timeString = timeEl ? timeEl.textContent : undefined;
-    const time = timeString ? new Date(timeString) : undefined;
-    const lat = parseFloat(curr.getAttribute("lat"));
-    const lng = parseFloat(curr.getAttribute("lon"));
-    const latLng: Leaflet.LatLngLiteral = {
-      lat,
-      lng,
-    };
-    const marker = Leaflet.marker(latLng, {
-      draggable: true,
-    });
-    const point = {
-      latLng,
-      elevation,
-      time,
-      timeString,
-      marker,
-    };
-    return point;
-  });
+  const trkptElements = gpxDoc.getElementsByTagName("trkpt");
+  const rteptElements = gpxDoc.getElementsByTagName("rtept");
+  const isGPX1_0 = trkptElements.length > 0;
+  const isGPX1_1 = rteptElements.length > 0;
+  const sourceElements = isGPX1_0
+    ? trkptElements
+    : isGPX1_1
+    ? rteptElements
+    : [];
+  let points: Point[] = Array.from(sourceElements).map(parseGPXElementToPoint);
+
   return {
     meta,
     points,
   };
+}
+
+/**
+ * Parses a GPX Element into a Point representation
+ * @param element The element to parse
+ * @returns A point object
+ */
+function parseGPXElementToPoint(element: Element): Point {
+  const elevationEl = element.getElementsByTagName("ele")[0];
+  const elevation = elevationEl
+    ? parseFloat(elevationEl.textContent)
+    : undefined;
+  const timeEl = element.getElementsByTagName("time")[0];
+  const timeString = timeEl ? timeEl.textContent : undefined;
+  const time = timeString ? new Date(timeString) : undefined;
+  const lat = parseFloat(element.getAttribute("lat"));
+  const lng = parseFloat(element.getAttribute("lon"));
+  const latLng: Leaflet.LatLngLiteral = {
+    lat,
+    lng,
+  };
+  const marker = Leaflet.marker(latLng, {
+    draggable: true,
+  });
+  const point = {
+    latLng,
+    elevation,
+    time,
+    timeString,
+    marker,
+  };
+  return point;
 }
 
 /**

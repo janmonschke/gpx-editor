@@ -10,6 +10,7 @@ type MapEditorEvent =
   | { type: "FILE_SELECTED"; file: File }
   | { type: "DEMO_SELECTED" }
   | { type: "FILE_PARSED"; file: ParsedFile }
+  | { type: "PARSE_ERROR" }
   | { type: "POINT_SELECTED"; point?: Point }
   | { type: "POINT_REMOVED"; point: Point }
   | { type: "POINT_UPDATED" }
@@ -108,6 +109,9 @@ export const editorMachine = createMachine<
           FILE_PARSED: {
             target: "display-gpx",
             actions: ["assignFile"],
+          },
+          PARSE_ERROR: {
+            target: "choose-gpx",
           },
         },
       },
@@ -257,7 +261,21 @@ export const editorMachine = createMachine<
         }
         parseDoc
           .then((xmlDoc) => parseFileFromGPX(xmlDoc, { fileName }))
-          .then((file) => callback({ type: "FILE_PARSED", file }));
+          .then((file) => {
+            if (file.points.length) {
+              callback({ type: "FILE_PARSED", file });
+            } else {
+              alert("Could not find points in GPX file.");
+              callback({ type: "PARSE_ERROR" });
+            }
+          })
+          .catch((error) => {
+            alert(
+              "Could not parse the GPX file. Check console for more details."
+            );
+            console.error(error);
+            callback({ type: "PARSE_ERROR" });
+          });
       },
       markerInteraction: (ctx) => (callback) => {
         if (ctx.file) {
