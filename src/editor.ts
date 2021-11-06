@@ -37,7 +37,7 @@ type MapEditorState =
   | {
       value: "choose-gpx";
       context: MapEditorContext & {
-        map: Object;
+        map: Leaflet.Map;
         file: undefined;
         line: undefined;
         currentPoint: undefined;
@@ -46,7 +46,7 @@ type MapEditorState =
   | {
       value: "load-gpx";
       context: MapEditorContext & {
-        map: Object;
+        map: Leaflet.Map;
         file: undefined;
         line: undefined;
         currentPoint: undefined;
@@ -55,16 +55,16 @@ type MapEditorState =
   | {
       value: "display-gpx";
       context: MapEditorContext & {
-        map: Object;
-        file: Object[];
+        map: Leaflet.Map;
+        file: ParsedFile;
         currentPoint: undefined;
       };
     }
   | {
       value: "display-export";
       context: MapEditorContext & {
-        map: Object;
-        file: Object[];
+        map: Leaflet.Map;
+        file: ParsedFile;
       };
     };
 
