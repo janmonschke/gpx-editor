@@ -6,7 +6,7 @@ import { ParsedFile, parseFileFromGPX, Point } from "./file";
 
 type MapEditorEvent =
   | { type: "done.invoke.initializeMap"; data: Leaflet.Map }
-  | { type: "FILE_SELECTED"; file: any }
+  | { type: "FILE_SELECTED"; file: File }
   | { type: "FILE_PARSED"; file: ParsedFile }
   | { type: "POINT_SELECTED"; point?: Point }
   | { type: "POINT_REMOVED"; point: Point }
