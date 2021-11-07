@@ -4,9 +4,9 @@
   "description": "",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "parcel build index.html",
+    "build": "parcel build index.html --no-cache --public-url ./",
     "start": "parcel index.html",
-    "deploy": "parcel build index.html --no-cache --public-url ./ && gh-pages -d dist -b gh-pages"
+    "deploy": "npm run build && gh-pages -d dist -b gh-pages"
   },
   "repository": {
     "type": "git",
